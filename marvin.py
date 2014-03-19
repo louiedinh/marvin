@@ -13,13 +13,13 @@ class OrgModeTask(object):
     """
     A task that knows how to insert itself into Org-Mode
     """
-    CATEGORY_TEMPLATE_MAP= {"default": "d", "listening": "l", "todo": "t"}
+    CATEGORY_TEMPLATE_MAP= {"inbox": "i", "listening": "l", "todo": "t"}
 
     def __init__(self, data):
         # Try to figure out the category and task.
         match = first_word_pattern.search(data.strip())
         if not match or match.group("first").lower() not in OrgModeTask.CATEGORY_TEMPLATE_MAP:
-            self.category = "default"
+            self.category = "inbox"
             self.task_description = data
         else:
             self.category = match.group("first").lower()
@@ -36,17 +36,21 @@ class OrgModeTask(object):
         argument = "org-protocol:/capture:/%s/Ignored/Ignored/%s" % (OrgModeTask.CATEGORY_TEMPLATE_MAP[self.category], 
                                                                      self.task_description)
         subprocess.call([command, argument])
+        print "%s %s"%(command, argument)
 
 class Daemon(object):
-    def __init__(self, config_filename):
+    def __init__(self, config_filename, secret_filename):
         self.connection = None
         # Read in configurations
         config = ConfigParser.ConfigParser()
         config.read(config_filename)
         self.hostname = config.get('server', 'hostname')
         self.username = config.get('account', 'username')
-        self.password = binascii.unhexlify(config.get('account', 'password'))
         self.mailbox = config.get('settings', 'mailbox')
+
+        secret = ConfigParser.ConfigParser()
+        secret.read(secret_filename)
+        self.password = binascii.unhexlify(secret.get('account', 'password'))
 
         self.tasks = []
 
@@ -91,5 +95,5 @@ class Daemon(object):
         self.connection.logout()
 
 if __name__ == '__main__':
-    daemon = Daemon(config_filename="/home/louie/Code/Python/marvin-daemon/marvin-daemon.config")
-    daemon.start(finalized=True)
+    daemon = Daemon(config_filename="marvin.config", secret_filename="marvin.secret")
+    daemon.start(finalized=False)
