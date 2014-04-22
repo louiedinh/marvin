@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import binascii
 import ConfigParser
 import imaplib
@@ -96,4 +98,4 @@ class Daemon(object):
 
 if __name__ == '__main__':
     daemon = Daemon(config_filename="marvin.config", secret_filename="marvin.secret")
-    daemon.start(finalized=False)
+    daemon.start(finalized=True)
